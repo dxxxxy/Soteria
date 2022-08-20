@@ -170,6 +170,58 @@ module.exports = async(client) => {
         //save all users with now remapped roles
         fs.writeFileSync("./new/users.json", JSON.stringify(users))
         log("User roles remapped")
+
+        //restore all messages
+        if (argv("messages")) {
+            //get all saved messages
+            const messages = JSON.parse(fs.readFileSync("./backup/messages.json", "utf8"))
+
+            //map of our old channels
+            const channelsMap = new Map()
+            await JSON.parse(fs.readFileSync("./backup/channels.json", "utf8")).filter(c => c.type === 0).forEach(c => {
+                channelsMap.set(c.id, {
+                        nsfw: c.nsfw,
+                        name: c.name,
+                        topic: c.topic,
+                        rateLimitPeruser: c.rateLimitPeruser,
+                    })
+                    // return [c.id, {
+                    //     nsfw: c.nsfw,
+                    //     name: c.name,
+                    //     topic: c.topic,
+                    //     rateLimitPeruser: c.rateLimitPeruser,
+                    // }]
+            })
+
+            //array of your new channels
+            const channels = await guild.channels.cache.map(c => {
+                return [c.id, {
+                    //comparators
+                    nsfw: c.nsfw,
+                    name: c.name,
+                    topic: c.topic,
+                    rateLimitPeruser: c.rateLimitPeruser,
+                }]
+
+            })
+
+            //for each message for each channel
+            messages.forEach(m => {
+                //check if channelsMap has that channel
+                m = m[1]
+                if (channelsMap.has(m.channelId)) {
+                    //find identical from channels
+                    if (channels.find(c2 => JSON.stringify(c2[1]) === JSON.stringify(channelsMap.get(m.channelId)))) {
+                        //replace by the identical found channel id
+                        m.channelId = channels.find(c2 => JSON.stringify(c2[1]) === JSON.stringify(channelsMap.get(m.channelId)))[0]
+                    }
+                }
+            })
+
+            //save all messages with now remapped channels
+            fs.writeFileSync("./new/messages.json", JSON.stringify(messages))
+            log("Message channels remapped")
+        }
     }
 
     //activity
