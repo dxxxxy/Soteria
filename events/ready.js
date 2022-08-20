@@ -1,7 +1,6 @@
 //require fs
 const fs = require("fs")
-const spinner = require("cli-spinners")
-const ora = require("commonjs-ora")
+const package = require("../package.json")
 const { log, fetchAll } = require("../library/utils")
 const { ActivityType } = require("discord.js")
 
@@ -15,40 +14,34 @@ const argv = (key) => {
 module.exports = (client) => { //required in every file
     console.log(`Logged in as ${client.user.tag}!`)
 
-    ora({ spinner: spinner.aesthetic, text: "Loading..." }).start()
-
     //save all
+    //node . --source=1001872401908371556 --save --messages
     if (argv("save")) {
         //get source guild
         const source = argv("source")
         const guild = client.guilds.cache.get(source)
 
         //save all roles
-        log("SAVING ROLES")
         const roles = guild.roles.cache
         fs.writeFileSync("./backup/roles.json", JSON.stringify(roles))
         log(`Saved ${roles.size} roles`)
 
         //save all channels
-        log("SAVING CHANNELS")
         const channels = guild.channels.cache.filter(c => c.type !== 4)
         fs.writeFileSync("./backup/channels.json", JSON.stringify(channels))
         log(`Saved ${channels.size} channels`)
 
         //save all categories
-        log("SAVING CATEGORIES")
         const categories = guild.channels.cache.filter(c => c.type === 4)
         fs.writeFileSync("./backup/categories.json", JSON.stringify(categories))
         log(`Saved ${categories.size} categories`)
 
         //save all users
-        log("SAVING USERS")
         const users = guild.members.cache
         fs.writeFileSync("./backup/users.json", JSON.stringify(users))
         log(`Saved ${users.size} users`)
 
         //save all permissions
-        log("SAVING PERMISSIONS")
         const permissions = guild.channels.cache.map(c => {
             return {
                 channel: c.id,
@@ -59,14 +52,13 @@ module.exports = (client) => { //required in every file
         log(`Saved ${permissions.length} permissions`)
 
         //save all messages
-        log("SAVING MESSAGES")
         const messages = []
         if (argv("messages")) {
             new Promise((resolve, reject) => {
                 let i = channels.filter(c => c.type === 0).size
                 channels.filter(c => c.type === 0).forEach(async channel => {
                     const channelMessages = await fetchAll(channel)
-                    messages.push(channelMessages)
+                    messages.push(...channelMessages)
                     i--
                     if (i === 0) {
                         resolve()
@@ -79,10 +71,11 @@ module.exports = (client) => { //required in every file
         }
 
         //activity
-        client.user.setActivity(`${roles.size}r ${channels.size}ch ${categories.size}ca ${users.size}u ${permissions.length}p ${messages.length}m`, { type: ActivityType.Watching })
+        // client.user.setActivity(`${roles.size}r ${channels.size}ch ${categories.size}ca ${users.size}u ${permissions.length}p ${messages.length}m`, { type: ActivityType.Watching })
     }
 
-    // const target = argv("target")
+    client.user.setActivity(`soteira v${package.version} | dxxxxy`, { type: ActivityType.Streaming })
+        // const target = argv("target")
 
     // //save all messages in all text channels
     // new Promise((resolve, reject) => {

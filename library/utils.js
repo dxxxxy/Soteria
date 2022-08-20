@@ -2,11 +2,10 @@ const utils = {
     log: (msg) => {
         console.log(`[SOTERIA] ${msg}`)
     },
-    fetchAll: async(channel, limit = 10000) => {
+    fetchAll: async(channel, limit = 100000) => {
         const allMessages = []
         let options = { limit: 100 }
         let last_id
-        module.exports.log(`Fetching messages in ${channel.name}`)
         while (true) {
             if (last_id) {
                 options.before = last_id
