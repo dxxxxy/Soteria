@@ -1,6 +1,7 @@
 const utils = {
     log: (msg) => {
         console.log(`[SOTERIA] ${msg}`)
+        return `[SOTERIA] ${msg}`
     },
     fetchAll: async(channel, limit = 100000) => {
         const allMessages = []

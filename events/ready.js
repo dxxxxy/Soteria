@@ -21,7 +21,7 @@ module.exports = async(client) => {
     //node . --guild=1001872401908371556 --save --messages
     if (argv("save")) {
         //save all roles --- templates already do that
-        const roles = await guild.roles.cache.map(r => {
+        const roles = await guild.roles.cache.filter(r => r.name !== "@everyone" && !r.tags["botId"]).map(r => {
             return [r.id, {
                 //comparators
                 icon: r.icon,
@@ -130,9 +130,16 @@ module.exports = async(client) => {
         //     log("User roles remapped")
         // })
 
-        //remap all users roles to new ids
+        //get all saved users
         const users = JSON.parse(fs.readFileSync("./backup/users.json", "utf8"))
+
+        //map of our old roles
         const rolesMap = new Map()
+        await JSON.parse(fs.readFileSync("./backup/roles.json", "utf8")).forEach(r => {
+            rolesMap.set(r[0], r[1])
+        })
+
+        //array of your new roles
         const roles = await guild.roles.cache.map(r => {
             return [r.id, {
                 //comparators
@@ -148,30 +155,19 @@ module.exports = async(client) => {
             }]
         })
 
-        console.log(roles)
-
-        await JSON.parse(fs.readFileSync("./backup/roles.json", "utf8")).forEach(r => {
-                rolesMap.set(r[0], r[1])
-            })
-            // console.log(rolesMap)
-
         //for each user for each role
         users.forEach(u => u.roles.forEach(r => {
             //check if rolesMap has that role
             if (rolesMap.has(r)) {
                 //find identical from roles
                 if (roles.find(r2 => JSON.stringify(r2[1]) === JSON.stringify(rolesMap.get(r)))) {
+                    //replace by the identical found role id
                     u.roles[u.roles.indexOf(r)] = roles.find(r2 => JSON.stringify(r2[1]) === JSON.stringify(rolesMap.get(r)))[0]
                 }
             }
         }))
 
-        // users.forEach(u => {
-        //         u.roles.forEach(r => {
-        //             log(bridge.find(b => b.old === r))
-        //             u.roles[u.roles.indexOf(r)] = bridge.find(b => b.old === r)
-        //         })
-        //     })
+        //save all users with now remapped roles
         fs.writeFileSync("./new/users.json", JSON.stringify(users))
         log("User roles remapped")
     }
