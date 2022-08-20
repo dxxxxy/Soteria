@@ -87,7 +87,7 @@ module.exports = async(client) => {
     }
 
     //restore all
-    //node . --guild=1010066750458564660 --restore --messages
+    //node . --guild=1010673562618712174 --restore --messages
     if (argv("restore")) {
         //restore all roles IN ORDER --- templates already do that
         // const bridge = []
@@ -173,6 +173,8 @@ module.exports = async(client) => {
 
         //restore all messages
         if (argv("messages")) {
+            /*----------REMAPPING----------*/
+
             //get all saved messages
             const messages = JSON.parse(fs.readFileSync("./backup/messages.json", "utf8"))
 
@@ -180,21 +182,15 @@ module.exports = async(client) => {
             const channelsMap = new Map()
             await JSON.parse(fs.readFileSync("./backup/channels.json", "utf8")).filter(c => c.type === 0).forEach(c => {
                 channelsMap.set(c.id, {
-                        nsfw: c.nsfw,
-                        name: c.name,
-                        topic: c.topic,
-                        rateLimitPeruser: c.rateLimitPeruser,
-                    })
-                    // return [c.id, {
-                    //     nsfw: c.nsfw,
-                    //     name: c.name,
-                    //     topic: c.topic,
-                    //     rateLimitPeruser: c.rateLimitPeruser,
-                    // }]
+                    nsfw: c.nsfw,
+                    name: c.name,
+                    topic: c.topic,
+                    rateLimitPeruser: c.rateLimitPeruser,
+                })
             })
 
             //array of your new channels
-            const channels = await guild.channels.cache.map(c => {
+            const channels = await guild.channels.cache.filter(c => c.type === 0).map(c => {
                 return [c.id, {
                     //comparators
                     nsfw: c.nsfw,
@@ -202,7 +198,6 @@ module.exports = async(client) => {
                     topic: c.topic,
                     rateLimitPeruser: c.rateLimitPeruser,
                 }]
-
             })
 
             //for each message for each channel
@@ -221,6 +216,50 @@ module.exports = async(client) => {
             //save all messages with now remapped channels
             fs.writeFileSync("./new/messages.json", JSON.stringify(messages))
             log("Message channels remapped")
+
+            /*----------RESTORING----------*/
+
+            //sort messages by createdTimestamp
+            messages.sort((a, b) => a[1].createdTimestamp - b[1].createdTimestamp)
+
+            //restore all messages
+            channels.forEach(async c => {
+                const channel = guild.channels.cache.find(c2 => c2.id === c[0])
+                const webhooks = await channel.fetchWebhooks()
+                let webhook
+
+                //reuuse webhook if one exists
+                if (webhooks.size > 0) {
+                    webhook = webhooks.first()
+                } else channel.createWebhook({ name: "Soteria" }).then(wh => {
+                    webhook = wh
+                })
+
+                messages.filter(m => m[1].channelId === c[0]).forEach(m => {
+                    m = m[1]
+
+                    //safe checking
+                    if (!m.content) m.content = "empty message"
+                    let username, avatarURL
+                    if (!users.find(u => m.authorId === u.userId)) {
+                        username = "unknown"
+                        avatarURL = "https://cdn.discordapp.com/embed/avatars/1.png"
+                    } else {
+                        username = users.find(u => m.authorId === u.userId).displayName
+                        avatarURL = users.find(u => m.authorId === u.userId).displayAvatarURL
+                    }
+
+                    //send
+                    webhook.send({
+                        content: m.content,
+                        embeds: m.embeds,
+                        username,
+                        avatarURL
+                    })
+                })
+            })
+
+            log("Done sending")
         }
     }
 
