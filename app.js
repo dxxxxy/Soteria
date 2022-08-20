@@ -1,4 +1,3 @@
-require("dotenv").config()
 const { Client, Collection, IntentsBitField } = require("discord.js")
 const fs = require("fs")
 const intents = new IntentsBitField()

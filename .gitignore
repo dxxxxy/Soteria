@@ -1,3 +1,4 @@
 node_modules/
-backup/
+backup/*.json
+new/*.json
 .env
