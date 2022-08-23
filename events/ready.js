@@ -87,7 +87,7 @@ module.exports = async(client) => {
     }
 
     //restore all
-    //node . --guild=1010673562618712174 --restore --messages
+    //node . --guild=1010066750458564660 --restore --messages
     if (argv("restore")) {
         //restore all roles IN ORDER --- templates already do that
         // const bridge = []
@@ -223,6 +223,7 @@ module.exports = async(client) => {
             messages.sort((a, b) => a[1].createdTimestamp - b[1].createdTimestamp)
 
             //restore all messages
+            let i = 0
             channels.forEach(async c => {
                 const channel = guild.channels.cache.find(c2 => c2.id === c[0])
                 const webhooks = await channel.fetchWebhooks()
@@ -235,11 +236,11 @@ module.exports = async(client) => {
                     webhook = wh
                 })
 
-                messages.filter(m => m[1].channelId === c[0]).forEach(m => {
+                messages.filter(m => m[1].channelId === c[0]).forEach(async m => {
                     m = m[1]
 
                     //safe checking
-                    if (!m.content) m.content = "empty message"
+                    if (!m.content) m.content = "​"
                     let username, avatarURL
                     if (!users.find(u => m.authorId === u.userId)) {
                         username = "unknown"
@@ -250,16 +251,17 @@ module.exports = async(client) => {
                     }
 
                     //send
-                    webhook.send({
+                    await webhook.send({
                         content: m.content,
                         embeds: m.embeds,
                         username,
                         avatarURL
+                    }).then(() => {
+                        i++
+                        log(`Message ${i}/${messages.length} restored`)
                     })
                 })
             })
-
-            log("Done sending")
         }
     }
 
