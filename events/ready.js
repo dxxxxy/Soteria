@@ -36,7 +36,7 @@ module.exports = async(client) => {
             }]
         })
         fs.writeFileSync("./backup/roles.json", JSON.stringify(roles))
-        log(`Saved ${roles.size} roles`)
+        log(`Saved ${roles.length} roles`)
 
         //save all channels --- templates already do that
         const channels = guild.channels.cache.filter(c => c.type !== 4) //needed for messages
@@ -87,7 +87,7 @@ module.exports = async(client) => {
     }
 
     //restore all
-    //node . --guild=1010066750458564660 --restore --messages
+    //node . --guild=1011786850056294521 --restore --messages
     if (argv("restore")) {
         //restore all roles IN ORDER --- templates already do that
         // const bridge = []
@@ -232,7 +232,7 @@ module.exports = async(client) => {
                 //reuuse webhook if one exists
                 if (webhooks.size > 0) {
                     webhook = webhooks.first()
-                } else channel.createWebhook({ name: "Soteria" }).then(wh => {
+                } else await channel.createWebhook({ name: "Soteria" }).then(wh => {
                     webhook = wh
                 })
 
