@@ -3,6 +3,7 @@ const fs = require("fs")
 const package = require("../package.json")
 const { log, fetchAll } = require("../library/utils")
 const { ActivityType } = require("discord.js")
+const fetch = require("node-fetch")
 
 const argv = (key) => {
     if (process.argv.includes(`--${key}`)) return true;
@@ -20,7 +21,7 @@ module.exports = async(client) => {
     //save all
     //node . --guild=1001872401908371556 --save --messages
     if (argv("save")) {
-        //save all roles --- templates already do that
+        //save all roles
         const roles = await guild.roles.cache.filter(r => r.name !== "@everyone" && !r.tags["botId"]).map(r => {
             return [r.id, {
                 //comparators
@@ -37,31 +38,18 @@ module.exports = async(client) => {
         })
         fs.writeFileSync("./backup/roles.json", JSON.stringify(roles))
         log(`Saved ${roles.length} roles`)
+            // guild.channels.cache.get("1019092490319581237").send(`Saved ${roles.length} roles`)
 
-        //save all channels --- templates already do that
+        //save all channels
         const channels = guild.channels.cache.filter(c => c.type !== 4) //needed for messages
-            // fs.writeFileSync("./backup/channels.json", JSON.stringify(channels))
-            // log(`Saved ${channels.size} channels`)
-
-        //save all categories --- templates already do that
-        // const categories = guild.channels.cache.filter(c => c.type === 4)
-        // fs.writeFileSync("./backup/categories.json", JSON.stringify(categories))
-        // log(`Saved ${categories.size} categories`)
+        fs.writeFileSync("./backup/channels.json", JSON.stringify(channels))
+        log(`Saved ${channels.size} channels`)
 
         //save all users
         const users = await guild.members.fetch() //cache apparently doesnt have intent access (you only see yourself and people in vcs)
         fs.writeFileSync("./backup/users.json", JSON.stringify(users))
         log(`Saved ${users.size} users`)
-
-        //save all permissions --- templates already do that
-        // const permissions = guild.channels.cache.map(c => {
-        //     return {
-        //         channel: c.id,
-        //         permissions: c.permissionOverwrites.cache
-        //     }
-        // })
-        // fs.writeFileSync("./backup/permissions.json", JSON.stringify(permissions))
-        // log(`Saved ${permissions.length} permissions`)
+            // guild.channels.cache.get("1019092490319581237").send(`Saved ${users.size} users`)
 
         //save all messages
         const messages = []
@@ -79,57 +67,14 @@ module.exports = async(client) => {
             }).then(() => {
                 fs.writeFileSync("./backup/messages.json", JSON.stringify(messages))
                 log(`Saved ${messages.length} messages`)
+                    // guild.channels.cache.get("1019092490319581237").send(`Saved ${messages.length} messages`)
             })
         }
-
-        //activity
-        // client.user.setActivity(`${roles.size}r ${channels.size}ch ${categories.size}ca ${users.size}u ${permissions.length}p ${messages.length}m`, { type: ActivityType.Watching })
     }
 
     //restore all
     //node . --guild=1011786850056294521 --restore --messages
     if (argv("restore")) {
-        //restore all roles IN ORDER --- templates already do that
-        // const bridge = []
-        // const roles = JSON.parse(fs.readFileSync("./backup/roles.json", "utf8"))
-        // roles.sort((a, b) => a.rawPosition - b.rawPosition)
-        // let position = 1
-        // new Promise((resolve, reject) => {
-        //     let i = roles.filter(r => r.name !== "@everyone" && !r.tags["botId"]).length
-        //     log(`Restoring ${i} roles`)
-        //     roles.filter(r => r.name !== "@everyone" && !r.tags["botId"]).forEach(async r => {
-        //         let id = r.id
-        //         r["position"] = position
-        //         r["reason"] = "soteira"
-        //         delete r.guild
-        //         delete r.id
-        //         delete r.rawPosition
-        //         delete r.managed
-        //         delete r.tags
-        //         delete r.createdTimestamp
-        //         await guild.roles.create(r).then(nr => {
-        //             log(`Created role: ${nr.name}`)
-        //             bridge.push({ old: id, new: nr.id })
-        //         })
-        //         position++;
-        //         i--
-        //         if (i === 0) {
-        //             resolve()
-        //         }
-        //     })
-        // }).then(() => {
-        //     //remap all users roles to new ids
-        //     const users = JSON.parse(fs.readFileSync("./backup/users.json", "utf8"))
-        //     users.forEach(u => {
-        //             u.roles.forEach(r => {
-        //                 log(bridge.find(b => b.old === r))
-        //                 u.roles[u.roles.indexOf(r)] = bridge.find(b => b.old === r)
-        //             })
-        //         })
-        //         // fs.writeFileSync("./backup/users.json", JSON.stringify(users))
-        //     log("User roles remapped")
-        // })
-
         //get all saved users
         const users = JSON.parse(fs.readFileSync("./backup/users.json", "utf8"))
 
