@@ -3,7 +3,6 @@ const fs = require("fs")
 const package = require("../package.json")
 const { log, fetchAll } = require("../library/utils")
 const { ActivityType } = require("discord.js")
-const fetch = require("node-fetch")
 
 const argv = (key) => {
     if (process.argv.includes(`--${key}`)) return true;
